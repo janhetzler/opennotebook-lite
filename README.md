@@ -1,4 +1,4 @@
-opennotebook-lite
+Open Notebook Light
 Schlanke, performante KI-Research-Engine mit eingebettetem SQLite, ChromaDB und lokalem OpenAI-kompatiblem LLM-Backend (IBM Granite Stack).
 
 1. Systemarchitektur & Tech-Stack
