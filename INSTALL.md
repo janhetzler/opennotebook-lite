@@ -8,7 +8,7 @@ This guide describes the decoupled architecture setup, demonstrating how to run 
    - Python 3.11+ (Python 3.13 supported)
    - Node.js & npm (for Next.js frontend)
    - `python3-dev` and build tools (required to compile `chroma-hnswlib`)
-2. **Windows Host (for LLM Execution)**
+2. **Host (for LLM Execution)**
    - [`llama.cpp` server](https://github.com/ggerganov/llama.cpp) (`llama-server.exe`)
    - IBM Granite Models (`granite-4.0-h-tiny-UD-Q4_K_XL.gguf` & `granite-embedding-107m-multilingual-Q8_0.gguf`)
 
