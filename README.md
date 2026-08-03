@@ -1,21 +1,21 @@
-Open Notebook Light
+# Open Notebook Light
+
 Schlanke, performante KI-Research-Engine mit eingebettetem SQLite, ChromaDB und lokalem OpenAI-kompatiblem LLM-Backend (IBM Granite Stack).
 
-1. Systemarchitektur & Tech-Stack
+## 1. Systemarchitektur & Tech-Stack
+
 Das Projekt setzt auf eine entkoppelte Monorepo-Architektur:
 
-Frontend: Next.js (App Router, TypeScript, Tailwind CSS, Lucide React)
+- **Frontend:** Next.js (App Router, TypeScript, Tailwind CSS, Lucide React)
+- **Backend:** FastAPI (Python 3.11+, Uvicorn, Pydantic v2)
+- **Datenbank & Persistenz:**
+  - Relationale Daten: SQLite via SQLAlchemy (Async) & Aiosqlite
+  - Vektor-Store: ChromaDB (Persistent Client) mit Kosinus-Metrik
+- **KI & Orchestrierung:** LangChain, LangGraph (Checkpointing via SQLite), lokaler `llama-server` (IBM Granite 4.0 H-Tiny & Embedding-Modell)
 
-Backend: FastAPI (Python 3.11+, Uvicorn, Pydantic v2)
+## 2. Projekt-Struktur
 
-Datenbank & Persistenz: * Relationale Daten: SQLite via SQLAlchemy (Async) & Aiosqlite
-
-Vektor-Store: ChromaDB (Persistent Client) mit Kosinus-Metrik
-
-KI & Orchestrierung: LangChain, LangGraph (Checkpointing via SQLite), lokaler llama-server (IBM Granite 4.0 H-Tiny & Embedding-Modell)
-
-2. Projekt-Struktur
-Plaintext
+```
 open-notebook-light/
 ├── api/                              # FastAPI-Router & App-Factory
 │   ├── main.py                       # Server-Entrypoint & Router-Registrierung
@@ -46,21 +46,24 @@ open-notebook-light/
 ├── pyproject.toml                    # Python-Abhängigkeiten & Build-Manifest
 ├── start.sh / stop.sh                # Server-Steuerungsskripte
 └── .env                              # Lokale Umgebungsvariablen
-3. Implementierung & Kernkomponenten
-Backend & Ingestion
-Dokumenten-Verarbeitung: Unterstützt .pdf, .txt, .md, .html. PDFs werden im Arbeitsspeicher ausgelesen (pypdf), via RecursiveCharacterTextSplitter in Chunks zerlegt und über den lokalen Embedding-Modell-Endpunkt in ChromaDB indiziert.
+```
 
-RAG-Pipeline: Benutzeranfragen werden eingebettet, gegen den ChromaDB-Vektor-Store abgeglichen (Top-K-Chunks) und zusammen mit dem Kontext an das lokale IBM-Granite-Modell übergeben.
+## 3. Implementierung & Kernkomponenten
 
-Fehlerbehebung: Clientseitige Optimierungen (wie das Bereinigen nicht unterstützter OpenAI-Parametertypen wie repeat_penalty) sichern die Stabilität der LLM-Kommunikation.
+### Backend & Ingestion
 
-Frontend
+- **Dokumenten-Verarbeitung:** Unterstützt `.pdf`, `.txt`, `.md`, `.html`. PDFs werden im Arbeitsspeicher ausgelesen (`pypdf`), via `RecursiveCharacterTextSplitter` in Chunks zerlegt und über den lokalen Embedding-Modell-Endpunkt in ChromaDB indiziert.
+- **RAG-Pipeline:** Benutzeranfragen werden eingebettet, gegen den ChromaDB-Vektor-Store abgeglichen (Top-K-Chunks) und zusammen mit dem Kontext an das lokale IBM-Granite-Modell übergeben.
+- **Fehlerbehebung:** Clientseitige Optimierungen (wie das Bereinigen nicht unterstützter OpenAI-Parametertypen wie `repeat_penalty`) sichern die Stabilität der LLM-Kommunikation.
+
+### Frontend
+
 Vollständig in das FastAPI-Backend integrierte Weboberfläche auf Next.js-Basis.
 
-Dashboard / Notizbücher: Erstellen, Verwalten und Löschen von Forschungsprojekten.
+- **Dashboard / Notizbücher:** Erstellen, Verwalten und Löschen von Forschungsprojekten.
+- **Quellen-Management:** Direkter Upload von Dokumenten inklusive Live-Statusanzeige und Vektor-Löschsynchronisation.
+- **RAG-Chat:** Interaktives Chat-Interface mit optionaler Notizbuch-Filterung und direkter Quellen-Referenzierung (Chunk-Match-Anzeige).
 
-Quellen-Management: Direkter Upload von Dokumenten inklusive Live-Statusanzeige und Vektor-Löschsynchronisation.
-
-RAG-Chat: Interaktives Chat-Interface mit optionaler Notizbuch-Filterung und direkter Quellen-Referenzierung (Chunk-Match-Anzeige).
+---
 
 Dieser Code wurde im Rahmen dieses Projekts aus dem Open-Notebook-Ursprungssystem herausgelöst, modular verschlankt und kann im Rahmen der entsprechenden Open-Source-Lizenzbedingungen frei weiterverwendet werden.
