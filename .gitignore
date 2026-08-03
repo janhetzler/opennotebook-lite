@@ -19,3 +19,6 @@ frontend/build/
 # OS/Logs
 .DS_Store
 *.log
+
+# Interne Agenten-Dokumentation
+PROJECT.md
