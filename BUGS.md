@@ -1,29 +1,24 @@
-# Known Bugs & Issues (Open Notebook Lite)
+# Known Bugs & Missing Features (Frontend Code Audit)
 
-This document tracks known issues, bugs, and limitations in the current version (v2.0.1-light).
+This document tracks all identified issues, unlinked UI elements, and mock components found during a comprehensive static analysis of the Next.js frontend source code (v2.0.1-light).
 
-## 🐛 Frontend Issues
+## 🚨 1. Navigation & Routing (Dead Links)
+* **`/search` (Search Page):** The sidebar (`sidebar.tsx`) contains a link to `/search`, but no corresponding Next.js page exists in `src/app/search/page.tsx`. Clicking it results in a 404 error.
+* **`/settings` (Settings Page):** The sidebar contains a link to `/settings`, but this page is also completely missing, resulting in a 404 error.
 
-### 1. Missing Notebook Source Assignment
-* **Status:** Open
-* **Description:** Users can create and delete notebooks, but there is currently no UI mechanism to assign uploaded sources to a specific notebook. Neither the Notebook Dashboard nor the Source Upload page contains a selection dropdown or assignment tool.
-* **Impact:** High. Notebooks cannot currently be used to isolate context for RAG queries.
+## 📓 2. Notebooks Dashboard (`page.tsx`)
+* **Notebook Cards are Unclickable (No Detail View):** The notebook cards render the title, description, and source count, but they have no `onClick` handler or `<Link>` wrapper. It is impossible to "open" a notebook to see its contents.
+* **No Edit Functionality:** Users can create and delete notebooks, but there is no UI to edit an existing notebook's title or description.
+* **Orphaned Source Count:** The UI displays `{nb.sources_count}`, but since sources cannot be assigned to notebooks yet (see below), this number will always be 0.
 
-### 2. Search Page Returns 404
-* **Status:** Open
-* **Description:** The sidebar navigation contains a link to `/search`, but the corresponding Next.js page has not been implemented. Clicking it results in a 404 Not Found error.
-* **Impact:** Medium.
+## 📄 3. Sources Management (`sources/page.tsx`)
+* **Missing Notebook Assignment (Critical):** The backend route `POST /api/sources/upload` accepts a `notebook_id` form field, but the frontend form in `sources/page.tsx` does not provide a dropdown to select a notebook. Files are always uploaded globally.
+* **No Re-Assignment UI:** There is no UI to move an already uploaded source into a specific notebook.
+* **No Auto-Refresh (Polling):** When a file is uploaded, its status is `processing`. The UI does not poll the backend for updates. Users must manually press F5 to see when it changes to `completed`.
+* **No Document Preview:** There is no way to click on a source to view the extracted text or verify what was actually parsed.
 
-### 3. Missing Auto-Refresh for Processing Status
-* **Status:** Open
-* **Description:** When uploading a new document on the `/sources` page, the status badge shows `processing`. When the background task finishes embedding the document into ChromaDB, the UI does not automatically update to `completed`.
-* **Workaround:** Users must manually refresh the page (F5) to see the updated status.
-* **Impact:** Low (UX issue).
+## 💬 4. Chat Interface (`chat/page.tsx`)
+* **Static "8k Kontext" Badge:** The badge displaying "8k Kontext" with a sparkles icon is a hardcoded UI mockup element in the frontend. It is not dynamically linked to the actual context window of the Granite model.
 
-## 🧠 Backend & AI Issues
-
-### 1. RAG Context Mixing (Hallucination Trigger)
-* **Status:** Open
-* **Description:** The `execute_chat` endpoint in `api/routers/chat.py` currently fetches a hardcoded `top_k=4` chunks from ChromaDB. If the user's query only heavily matches one chunk, the system still passes the three other (potentially unrelated) chunks to the Granite LLM. Due to the small size of the Granite 4.0 H-Tiny model, it struggles to strictly adhere to the system prompt and sometimes hallucinates by mixing information from the unrelated chunks into the final answer.
-* **Proposed Solution:** Implement a dynamic threshold filter. Instead of blindly passing 4 chunks, filter out chunks that exceed a specific cosine distance threshold (e.g., `distance > 0.3`), or dynamically adjust `top_k` based on score variance.
-* **Impact:** Medium. RAG retrieval works perfectly, but the context assembly needs tuning.
+## 🧠 5. Backend & AI Integration
+* **RAG Context Mixing (Hallucination Trigger):** The `execute_chat` endpoint in `api/routers/chat.py` blindly fetches `top_k=4` chunks. If irrelevant chunks are included, the Granite 4.0 H-Tiny model tends to hallucinate and mix contexts. Needs a distance threshold filter.
