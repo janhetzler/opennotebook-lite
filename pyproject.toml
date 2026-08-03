@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "open-notebook-light"
+version = "2.0.0-light"
+description = "Schlanke, performante KI-Research-Engine mit eingebettetem SQLite, ChromaDB und lokalem OpenAI-kompatiblem LLM Backend (IBM Granite Stack)"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "fastapi>=0.104.0,<1.0.0",
+    "uvicorn[standard]>=0.24.0,<1.0.0",
+    "pydantic>=2.9.2,<3.0.0",
+    "loguru>=0.7.2,<1.0.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+    "tomli>=2.0.1,<3.0.0",
+    "httpx[socks]>=0.27.0,<1.0.0",
+    "sqlalchemy[asyncio]>=2.0.25,<3.0.0",
+    "aiosqlite>=0.19.0,<1.0.0",
+    "chromadb>=0.4.22,<0.6.0",
+    "alembic>=1.13.0,<2.0.0",
+    "langchain>=0.3.0,<0.4.0",
+    "langchain-core>=0.3.0,<0.4.0",
+    "langchain-openai>=0.2.0,<0.3.0",
+    "langchain-text-splitters>=0.3.0,<0.4.0",
+    "langgraph>=0.2.0,<0.3.0",
+    "langgraph-checkpoint-sqlite>=2.0.0,<4.0.0",
+    "tiktoken>=0.7.0,<1.0.0",
+    "pypdf>=4.0.0,<5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0,<9.0.0",
+    "pytest-asyncio>=0.23.0,<1.0.0",
+    "pytest-cov>=4.1.0,<6.0.0",
+    "ruff>=0.3.0,<1.0.0",
+]
+
+[tool.setuptools]
+packages = ["open_notebook", "api"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

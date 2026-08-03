@@ -1,0 +1,21 @@
+# Environments
+venv/
+__pycache__/
+.env
+.env.local
+
+# Databases
+data/
+*.db
+*.sqlite3
+
+# Node/Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+frontend/out/
+frontend/build/
+
+# OS/Logs
+.DS_Store
+*.log
