@@ -1,56 +1,66 @@
-Open Notebook Light: Vollständige Implementierungs- und Architektur-Dokumentation
+opennotebook-lite
+Schlanke, performante KI-Research-Engine mit eingebettetem SQLite, ChromaDB und lokalem OpenAI-kompatiblem LLM-Backend (IBM Granite Stack).
 
-Open Notebook Light ist eine schlanke, performante KI-Research-Engine, die auf unnötige externe Container-Infrastrukturen verzichtet und stattdessen auf ein lokal eingebettetes Persistenz- und Modell-Setup unter Linux setzt.
+1. Systemarchitektur & Tech-Stack
+Das Projekt setzt auf eine entkoppelte Monorepo-Architektur:
 
-Vierstufiger Implementierungsfahrplan & Detail-Spezifikation
+Frontend: Next.js (App Router, TypeScript, Tailwind CSS, Lucide React)
 
-Schritt 1: Projekt-Scaffolding & Virtual Environment Setup
-• Quellen-Referenz: Gestützt auf das # Advanced Deep Research Prompt: Architectural Feasibility & Greenfield Migration Strategy Audit sowie das Comprehensive File-Level Inventory.
-• Aktivität: Der Deep Research Agent generiert das vollständige Skript für den bereinigten Verzeichnisbaum und das Manifest.
-• Du kopierst dieses Skript in ein Google Colab Notebook, lässt es dort ausführen und nutzt die Exportfunktion, um die exakt 12 Kern-Dateien aufgeteilt auf die 6 Ordner (api/, open_notebook/ai/, database/, domain/, graphs/, utils/) lokal zu erzeugen.
-• Umgebung: In der Agenten-IDE wird die Python-Umgebung (venv) unter Linux auf Basis von Python 3.11+ und der schlanken pyproject.toml (ohne SurrealDB, Podcasts oder AI-Prompter) aufgesetzt.
+Backend: FastAPI (Python 3.11+, Uvicorn, Pydantic v2)
 
-Schritt 2: Server-Infrastruktur & Lifecycle (Ohne Businesslogik)
-• Quellen-Referenz: Abgeleitet aus dem # Automated Scaffolding & Code Implementation Guide for Open Notebook Light und dem File-Level Audit.
-• Aktivität: Bereitstellung eines minimalen technischen Fundaments, damit der Server (FastAPI) stabil hochfährt.
-• Komponenten:
-  1. SQLite-Session-Manager (sqlite_client.py): Asynchrones SQLAlchemy-Setup mit Write-Ahead Logging (PRAGMA journal_mode = WAL) und erzwungenen Fremdschlüsseln (PRAGMA foreign_keys = ON).
-  2. ChromaDB-Persistent-Client (vector_store.py): Initialisierung des lokalen Vektorspeichers für die source_chunks-Collection.
-  3. FastAPI-App-Entrypoint & Lifespan (api/main.py): Lifespan-Hooks führen beim Start automatisch die Tabellen-Erstellung (Base.metadata.create_all) sowie den ChromaDB-Prüf-Call aus. Ergänzt um Steuerungs-Skripte (start.sh, stop.sh) und den /health-Endpunkt zur Verifikation.
+Datenbank & Persistenz: * Relationale Daten: SQLite via SQLAlchemy (Async) & Aiosqlite
 
-Schritt 3: Modell-Schicht & Vektor-Businesslogik
-• Quellen-Referenz: Gestützt auf den # Hyper-Lean Local RAG Architecture Blueprint (IBM Granite Stack) und den Codebase Reduction Audit.
-• Aktivität: Implementierung der Daten- und Vektor-Businesslogik gekoppelt an die lokale Modell-Schicht.
-• Komponenten:
-  1. Lokale Modell-Fabrik (open_notebook/ai/models.py): Zentralisierter Client für den lokalen OpenAI-kompatiblen Endpunkt (Ollama). Bündelt das Chat-Modell (IBM Granite 4.0 H-Tiny mit 8k-Kontext) und das Vektor-Modell (Granite Embedding 107M mit 384 Dimensionen).
-  2. Relationale ORM-Modelle (models_sqlite.py): Tabellen für Notebooks, Sources, Notes und Chat-Sessions inklusive der Junction-Tabellen (notebook_sources, notebook_notes).
-  3. Testbarkeit: Vollständig verifizierbar über reine Kommandozeilen-Skripte im Terminal (SQLite-Schema-Inspektion und In-Script-Schreib-/Lesetests) ganz ohne IDE-Zwang.
+Vektor-Store: ChromaDB (Persistent Client) mit Kosinus-Metrik
 
-Schritt 4: IDE-Integration, Uploads & Zero-OCR-Fehlerbehandlung
-• Quellen-Referenz: Abgeleitet aus dem # OCR Dependency Audit & Non-OCR Processing Feasibility Analysis und dem Implementation Blueprint.
-• Aktivität: Scharfschalten des Gesamtsystems in der Agenten-IDE, End-to-End-Tests und robuste Fehlerabsicherung ohne schwere Binär-Frameworks (Tesseract-OCR / Poppler-Utils).
-• Komponenten:
-  1. MIME-Type-Validierung (api/routers/sources.py): Strikte Allowlist am Upload-Endpunkt. Versucht an dieser Stelle ein Nutzer eine reine Bilddatei (image/png, image/jpeg) hochzuladen, lehnt das System den Upload sofort mit HTTP 400 Bad Request ab.
-  2. Ingestion-Absicherung (open_notebook/graphs/source.py): Sollte ein unsearchbares, gescanntes PDF die API-Prüfung passieren, extrahiert der rein pythonbasierte Stream-Parser (pypdf) einen leeren Textstring (""). Das System bricht kontrolliert ab und setzt den processing_status in SQLite sauber auf failed_no_digital_text.
-  3. End-to-End-Validierung: Ausführen von pytest-Routentests (Prüfung, dass entfernte Podcast-/Transformations-Endpunkte fehlerfrei 404 Not Found liefern) sowie Live-Prüfungen des gesamten RAG-Datenflusses von Chunking bis ChromaDB-Vektorabfrage.
+KI & Orchestrierung: LangChain, LangGraph (Checkpointing via SQLite), lokaler llama-server (IBM Granite 4.0 H-Tiny & Embedding-Modell)
 
----
+2. Projekt-Struktur
+Plaintext
+open-notebook-light/
+├── api/                              # FastAPI-Router & App-Factory
+│   ├── main.py                       # Server-Entrypoint & Router-Registrierung
+│   └── routers/
+│       ├── chat.py                   # RAG-Chat-Endpunkt (ChromaDB + LLM)
+│       ├── notebooks.py              # Notizbuch-CRUD-Operationen
+│       └── sources.py                # Dokumenten-Upload & Quellen-Verwaltung
+│
+├── open_notebook/                    # Backend-Core & Business-Logik
+│   ├── ai/                           # Modell-Fabrik (models.py)
+│   ├── database/                     # SQLite & ChromaDB-Anbindung
+│   │   ├── sqlite_client.py          # Asynchroner Session-Manager
+│   │   ├── models_sqlite.py          # SQLAlchemy ORM-Modelle
+│   │   └── vector_store.py           # ChromaDB Persistent Client Wrapper
+│   ├── domain/                       # Pydantic Basis-Modelle
+│   ├── graphs/                       # RAG-Pipelines & Ingestion (ask.py, chat.py, source.py)
+│   └── utils/                        # PDF-Extractor & Context-Builder
+│
+├── frontend/                         # Next.js Webinterface (App Router)
+│   ├── src/app/                      # Dashboard, Sources, Chat
+│   ├── package.json
+│   └── .env.local                    # NEXT_PUBLIC_API_URL=http://localhost:8000
+│
+├── data/                             # Persistenz (in .gitignore)
+│   ├── notebook.db                   # SQLite Datenbank
+│   └── chroma/                       # ChromaDB Vektor-Store
+│
+├── pyproject.toml                    # Python-Abhängigkeiten & Build-Manifest
+├── start.sh / stop.sh                # Server-Steuerungsskripte
+└── .env                              # Lokale Umgebungsvariablen
+3. Implementierung & Kernkomponenten
+Backend & Ingestion
+Dokumenten-Verarbeitung: Unterstützt .pdf, .txt, .md, .html. PDFs werden im Arbeitsspeicher ausgelesen (pypdf), via RecursiveCharacterTextSplitter in Chunks zerlegt und über den lokalen Embedding-Modell-Endpunkt in ChromaDB indiziert.
 
-Aktueller Status (2026-08-02)
+RAG-Pipeline: Benutzeranfragen werden eingebettet, gegen den ChromaDB-Vektor-Store abgeglichen (Top-K-Chunks) und zusammen mit dem Kontext an das lokale IBM-Granite-Modell übergeben.
 
-Deployment-Ziel: VM-Gast (Debian 13, QEMU/WHPX auf Windows-Host)
-Phase: Testmodus — Entscheidung über Weiterbetrieb steht aus
+Fehlerbehebung: Clientseitige Optimierungen (wie das Bereinigen nicht unterstützter OpenAI-Parametertypen wie repeat_penalty) sichern die Stabilität der LLM-Kommunikation.
 
-LLM-Backend-Architektur (geplant):
-• Windows-Host: llama-server.exe im Router Mode (kein --model Flag)
-  - Port 11434, erreichbar aus der VM via 10.0.2.2:11434
-  - Lädt Granite Tiny (Chat) und Granite Embedding 107m on-demand
-• VM-Gast: OPENAI_API_BASE=http://10.0.2.2:11434/v1
+Frontend
+Vollständig in das FastAPI-Backend integrierte Weboberfläche auf Next.js-Basis.
 
-Code-Review-Befund (2026-08-02):
-• Architektur und Struktur: sauber, konsequent, produktionsreif
-• Kritischer Bug gefunden: open_notebook/database/vector_store.py fehlt
-  - Die Datei wird in 4 Modulen importiert (main.py, sources.py, source.py, ask.py)
-  - Ohne sie startet der Server nicht (ImportError)
-  - Muss implementiert werden mit: ChromaDB-Init, add_chunks(), search(), delete_source_chunks()
-• Alle anderen Module (sqlite_client, models_sqlite, source, ask, chat, models) sind vollständig
+Dashboard / Notizbücher: Erstellen, Verwalten und Löschen von Forschungsprojekten.
+
+Quellen-Management: Direkter Upload von Dokumenten inklusive Live-Statusanzeige und Vektor-Löschsynchronisation.
+
+RAG-Chat: Interaktives Chat-Interface mit optionaler Notizbuch-Filterung und direkter Quellen-Referenzierung (Chunk-Match-Anzeige).
+
+Dieser Code wurde im Rahmen dieses Projekts aus dem Open-Notebook-Ursprungssystem herausgelöst, modular verschlankt und kann im Rahmen der entsprechenden Open-Source-Lizenzbedingungen frei weiterverwendet werden.
