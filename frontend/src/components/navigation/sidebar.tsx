@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, FileText, MessageSquare, Search, Settings } from "lucide-react";
+import { BookOpen, FileText, MessageSquare, Search, Settings, Terminal } from "lucide-react";
 
 interface NavItem {
   label: string;
@@ -16,6 +16,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Sources", href: "/sources", icon: FileText },
   { label: "Chat (RAG)", href: "/chat", icon: MessageSquare },
   { label: "Search", href: "/search", icon: Search },
+  { label: "Logs", href: "/logs", icon: Terminal },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

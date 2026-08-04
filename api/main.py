@@ -18,7 +18,7 @@ from loguru import logger
 from open_notebook.database.sqlite_client import sqlite_client
 from open_notebook.database.models_sqlite import Base
 from open_notebook.database.vector_store import vector_store
-from api.routers import sources, notebooks, chat, search, settings
+from api.routers import sources, notebooks, chat, search, settings, logs
 
 # Zentrale rotierende Log-Datei konfigurieren
 log_path = os.getenv("LOG_FILE_PATH", "/app/data/logs/open_notebook.log")
@@ -52,12 +52,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Alle 5 Core Router registrieren
+# Alle 6 Core Router registrieren
 app.include_router(sources.router, prefix="/api/sources", tags=["Sources"])
 app.include_router(notebooks.router, prefix="/api/notebooks", tags=["Notebooks"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(search.router, prefix="/api/search", tags=["Search"])
 app.include_router(settings.router, prefix="/api/settings", tags=["Settings"])
+app.include_router(logs.router, prefix="/api/logs", tags=["Logs"])
 
 
 @app.get("/health", tags=["Health"])
