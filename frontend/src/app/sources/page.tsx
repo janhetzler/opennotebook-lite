@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Upload, CheckCircle2, AlertCircle, Loader2, FileText, Trash2 } from "lucide-react";
+import { Upload, CheckCircle2, AlertCircle, Loader2, FileText, Trash2, BookOpen } from "lucide-react";
 
 interface Source {
   id: string;
@@ -10,9 +10,16 @@ interface Source {
   processing_status: string;
 }
 
+interface Notebook {
+  id: string;
+  title: string;
+}
+
 export default function SourcesPage() {
   const [file, setFile] = useState<File | null>(null);
   const [sources, setSources] = useState<Source[]>([]);
+  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
+  const [selectedNotebookId, setSelectedNotebookId] = useState<string>("");
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -25,9 +32,29 @@ export default function SourcesPage() {
       .catch((err) => console.error("Fehler beim Laden der Quellen:", err));
   };
 
+  const fetchNotebooks = () => {
+    fetch(`${apiUrl}/api/notebooks`)
+      .then((res) => res.json())
+      .then((data) => setNotebooks(data))
+      .catch((err) => console.error("Fehler beim Laden der Notizbücher:", err));
+  };
+
   useEffect(() => {
     fetchSources();
+    fetchNotebooks();
   }, [apiUrl]);
+
+  // Automatisches Polling (alle 3s), solange mindestens eine Quelle den Status 'processing' hat
+  useEffect(() => {
+    const hasProcessing = sources.some((s) => s.processing_status === "processing");
+    if (!hasProcessing) return;
+
+    const interval = setInterval(() => {
+      fetchSources();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [sources]);
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +65,9 @@ export default function SourcesPage() {
 
     const formData = new FormData();
     formData.append("file", file);
+    if (selectedNotebookId) {
+      formData.append("notebook_id", selectedNotebookId);
+    }
 
     try {
       const response = await fetch(`${apiUrl}/api/sources/upload`, {
@@ -88,6 +118,25 @@ export default function SourcesPage() {
       </div>
 
       <form onSubmit={handleUpload} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
+        {/* Notizbuch-Zuordnungs Dropdown */}
+        <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-300">
+          <BookOpen className="h-4 w-4 text-sky-400 shrink-0" />
+          <span className="font-medium">Zu Notizbuch zuordnen:</span>
+          <select
+            value={selectedNotebookId}
+            onChange={(e) => setSelectedNotebookId(e.target.value)}
+            className="bg-transparent focus:outline-none cursor-pointer flex-1 text-slate-100"
+          >
+            <option value="" className="bg-slate-900">Kein Notizbuch (Global)</option>
+            {notebooks.map((nb) => (
+              <option key={nb.id} value={nb.id} className="bg-slate-900">
+                {nb.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* File Dropzone */}
         <div className="border-2 border-dashed border-slate-700 hover:border-sky-500/50 rounded-lg p-8 text-center space-y-3 transition-colors">
           <Upload className="h-8 w-8 text-slate-400 mx-auto" />
           <div className="space-y-1">
@@ -139,6 +188,7 @@ export default function SourcesPage() {
         </div>
       )}
 
+      {/* Tabelle vorhandener Quellen */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-800 flex justify-between items-center">
           <h3 className="font-semibold text-slate-200 text-sm">Hochgeladene Quellen ({sources.length})</h3>
@@ -160,14 +210,15 @@ export default function SourcesPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <span
-                    className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${
                       src.processing_status === "completed"
                         ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                         : src.processing_status === "processing"
-                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse"
                         : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                     }`}
                   >
+                    {src.processing_status === "processing" && <Loader2 className="h-3 w-3 animate-spin" />}
                     {src.processing_status}
                   </span>
                   <button

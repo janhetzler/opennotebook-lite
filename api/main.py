@@ -1,10 +1,10 @@
 """
-Open Notebook Light - Hauptanwendungs-Factory (Aktualisiert)
+Open Notebook Light - Hauptanwendungs-Factory (Phase 2 Update)
 Modul: api/main.py
-Version: 2.0.1-light
+Version: 2.1.0-light
 """
 
-__version__ = "2.0.1-light"
+__version__ = "2.1.0-light"
 
 from dotenv import load_dotenv
 load_dotenv()  # Muss vor allen anderen Projekt-Imports stehen
@@ -18,13 +18,12 @@ from loguru import logger
 from open_notebook.database.sqlite_client import sqlite_client
 from open_notebook.database.models_sqlite import Base
 from open_notebook.database.vector_store import vector_store
-from api.routers import sources, notebooks, chat
-
+from api.routers import sources, notebooks, chat, search, settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("=== Open Notebook Light v2.0.1-light startet ===")
+    logger.info("=== Open Notebook Light v2.1.0-light startet ===")
     async with sqlite_client.engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     chunk_count = vector_store.collection.count()
@@ -48,9 +47,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Alle 5 Core Router registrieren
 app.include_router(sources.router, prefix="/api/sources", tags=["Sources"])
 app.include_router(notebooks.router, prefix="/api/notebooks", tags=["Notebooks"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
+app.include_router(search.router, prefix="/api/search", tags=["Search"])
+app.include_router(settings.router, prefix="/api/settings", tags=["Settings"])
 
 
 @app.get("/health", tags=["Health"])
