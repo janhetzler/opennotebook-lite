@@ -20,6 +20,11 @@ from open_notebook.database.models_sqlite import Base
 from open_notebook.database.vector_store import vector_store
 from api.routers import sources, notebooks, chat, search, settings
 
+# Zentrale rotierende Log-Datei konfigurieren
+log_path = os.getenv("LOG_FILE_PATH", "/app/data/logs/open_notebook.log")
+os.makedirs(os.path.dirname(log_path), exist_ok=True)
+logger.add(log_path, rotation="10 MB", retention="14 days", compression="zip", enqueue=True)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
