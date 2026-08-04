@@ -93,7 +93,7 @@ class VectorStore:
         if total == 0:
             return []
 
-        n_results = min(limit, total)
+        n_results = 100 if notebook_id else min(limit, total)
         # ChromaDB unterstuetzt keinen $contains-Operator fuer String-Felder.
         # notebook_ids wird als kommaseparierter String gespeichert, daher
         # suchen wir global (kein Filter) und lassen die Anwendungsschicht filtern.
@@ -117,6 +117,11 @@ class VectorStore:
                 results["metadatas"][0],
                 results["distances"][0],
             ):
+                if notebook_id:
+                    n_ids_str = meta.get("notebook_ids", "")
+                    if not n_ids_str or notebook_id not in n_ids_str.split(","):
+                        continue
+                        
                 output.append(
                     {
                         "text": doc,
@@ -125,6 +130,8 @@ class VectorStore:
                         "distance": dist,
                     }
                 )
+                if len(output) >= limit:
+                    break
         return output
 
     async def delete_source_chunks(self, source_id: str) -> None:

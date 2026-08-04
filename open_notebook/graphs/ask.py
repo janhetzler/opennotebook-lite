@@ -1,4 +1,4 @@
-﻿"""
+"""
 Open Notebook Light - RAG Vektor-Such-Graph
 Modul: open_notebook/graphs/ask.py
 Zweck: Ausführung von Kosinus-Ähnlichkeitssuchen in ChromaDB für gegebene Anfragen.
@@ -17,6 +17,7 @@ async def execute_rag_vector_search(
     query: str,
     notebook_id: str,
     top_k: int = RAG_TOP_K_CHUNKS,
+    max_distance: float = 1.0,
 ) -> List[Dict[str, Any]]:
     if not query or not query.strip():
         return []
@@ -24,9 +25,12 @@ async def execute_rag_vector_search(
     embedder = await get_default_embedding_model()
     query_embedding = await embedder.aembed_query(query)
 
+    fetch_limit = top_k * 5 if max_distance < 1.0 else top_k
     search_results = await vector_store.search(
         query_embedding=query_embedding,
         notebook_id=notebook_id,
-        limit=top_k,
+        limit=fetch_limit,
     )
-    return search_results
+    
+    filtered = [r for r in search_results if r["distance"] <= max_distance]
+    return filtered[:top_k]

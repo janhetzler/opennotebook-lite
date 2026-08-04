@@ -55,7 +55,8 @@ async def execute_chat(payload: ChatRequest):
     retrieved_chunks = await execute_rag_vector_search(
         query=payload.message,
         notebook_id=payload.notebook_id or "",
-        top_k=4
+        top_k=4,
+        max_distance=0.55
     )
 
     context_text = "\n\n---\n\n".join([c["text"] for c in retrieved_chunks]) if retrieved_chunks else "Keine relevanten Dokumenten-Passagen gefunden."
