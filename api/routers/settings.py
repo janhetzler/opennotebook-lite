@@ -34,7 +34,7 @@ class SettingsResponse(BaseModel):
     llm_router_online: bool
 
 
-@router.get("/", response_model=SettingsResponse)
+@router.get("", response_model=SettingsResponse)
 async def get_settings():
     """Liest Umgebungsvariablen aus und prüft per HTTP-Ping die Erreichbarkeit des lokalen LLM-Routers."""
     api_base = os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1")

@@ -31,7 +31,7 @@ class SearchResponse(BaseModel):
     results: List[SearchResultItem]
 
 
-@router.get("/", response_model=SearchResponse)
+@router.get("", response_model=SearchResponse)
 async def global_search(
     q: str = Query(..., min_length=1, description="Suchbegriff für die semantische Vektorsuche"),
     notebook_id: Optional[str] = Query(None, description="Optionaler Notizbuch-Filter"),
