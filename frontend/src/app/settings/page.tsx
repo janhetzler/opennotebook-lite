@@ -17,6 +17,7 @@ interface SystemSettings {
   chroma_db_path: string;
   total_vector_chunks: number;
   llm_router_online: boolean;
+  rag_max_distance: number;
 }
 
 export default function SettingsPage() {
@@ -37,6 +38,25 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchSettings();
   }, [apiUrl]);
+
+  const handleMaxDistanceChange = async (newVal: number) => {
+    if (!settings) return;
+    setSettings({ ...settings, rag_max_distance: newVal }); // Optimistic update
+    
+    try {
+      const res = await fetch(`${apiUrl}/api/settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rag_max_distance: newVal }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSettings(data);
+      }
+    } catch (err) {
+      console.error("Fehler beim Aktualisieren der Einstellungen:", err);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -117,6 +137,25 @@ export default function SettingsPage() {
                 <span className="text-slate-500 text-[11px]">Umgebung</span>
                 <p className="text-sm font-mono font-bold text-slate-200 uppercase">{settings.environment}</p>
               </div>
+            </div>
+
+            <div className="mt-4 bg-slate-950 p-4 rounded-lg border border-slate-800">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-slate-200 text-sm font-semibold">RAG Max Distance (Filter-Strenge)</span>
+                <span className="text-sky-400 font-mono font-bold text-sm">{settings.rag_max_distance.toFixed(2)}</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mb-4">
+                Ein Wert von 1.0 bedeutet keine strenge Filterung (Original-Verhalten). Werte wie 0.55 filtern halluzinierende / irrelevante Chunks heraus.
+              </p>
+              <input 
+                type="range" 
+                min="0.1" 
+                max="1.0" 
+                step="0.05"
+                value={settings.rag_max_distance}
+                onChange={(e) => handleMaxDistanceChange(parseFloat(e.target.value))}
+                className="w-full accent-sky-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer"
+              />
             </div>
           </div>
         </div>

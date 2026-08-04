@@ -9,7 +9,8 @@ __version__ = "2.1.0-light"
 
 import os
 import httpx
-from fastapi import APIRouter
+import dotenv
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from loguru import logger
 
@@ -32,6 +33,10 @@ class SettingsResponse(BaseModel):
     chroma_db_path: str
     total_vector_chunks: int
     llm_router_online: bool
+    rag_max_distance: float
+
+class UpdateSettingsRequest(BaseModel):
+    rag_max_distance: float
 
 
 @router.get("", response_model=SettingsResponse)
@@ -64,4 +69,21 @@ async def get_settings():
         chroma_db_path=os.getenv("CHROMA_DB_PATH", "/app/data/chroma"),
         total_vector_chunks=vector_store.collection.count(),
         llm_router_online=llm_online,
+        rag_max_distance=float(os.getenv("RAG_MAX_DISTANCE", "1.0"))
     )
+
+@router.post("", response_model=SettingsResponse)
+async def update_settings(payload: UpdateSettingsRequest):
+    """Speichert Konfigurationen (z.B. RAG_MAX_DISTANCE) persistent in der .env Datei."""
+    try:
+        env_path = os.path.join(os.getcwd(), ".env")
+        dotenv.set_key(env_path, "RAG_MAX_DISTANCE", str(payload.rag_max_distance))
+        
+        # Laufzeitumgebung sofort aktualisieren (falls os.environ direkt genutzt wird)
+        os.environ["RAG_MAX_DISTANCE"] = str(payload.rag_max_distance)
+        
+        logger.info(f"System-Einstellung RAG_MAX_DISTANCE auf {payload.rag_max_distance} aktualisiert.")
+        return await get_settings()
+    except Exception as e:
+        logger.error(f"Fehler beim Speichern der Einstellungen: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

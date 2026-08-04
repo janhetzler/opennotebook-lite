@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from langchain_core.messages import SystemMessage, HumanMessage
 from loguru import logger
 
+import os
 from open_notebook.ai.models import get_default_chat_model
 from open_notebook.graphs.ask import execute_rag_vector_search
 
@@ -52,11 +53,13 @@ async def execute_chat(payload: ChatRequest):
 
     logger.info(f"RAG-Chat Anfrage empfangen: '{payload.message}' (Notebook ID: {payload.notebook_id})")
 
+    max_dist = float(os.getenv("RAG_MAX_DISTANCE", "1.0"))
+    
     retrieved_chunks = await execute_rag_vector_search(
         query=payload.message,
         notebook_id=payload.notebook_id or "",
         top_k=4,
-        max_distance=0.55
+        max_distance=max_dist
     )
 
     context_text = "\n\n---\n\n".join([c["text"] for c in retrieved_chunks]) if retrieved_chunks else "Keine relevanten Dokumenten-Passagen gefunden."
