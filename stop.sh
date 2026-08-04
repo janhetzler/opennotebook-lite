@@ -11,10 +11,12 @@ else
 fi
 
 echo "[+] Beende Next.js Frontend..."
+fuser -k 3000/tcp 2>/dev/null || true
+pkill -f "next-server" || true
 if pkill -f "next start"; then
     echo "    Frontend erfolgreich beendet."
 else
-    echo "    Kein laufendes Frontend gefunden."
+    echo "    Kein laufendes Frontend gefunden (oder bereits beendet)."
 fi
 
 echo "=== Stopvorgang abgeschlossen ==="

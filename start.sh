@@ -33,7 +33,9 @@ fi
 # 3. Frontend starten (im Hintergrund)
 echo "[+] Starte Next.js Frontend..."
 cd frontend
-# Idempotenz: Sicherstellen, dass alte Instanzen beendet sind
+# Idempotenz: Sicherstellen, dass alte Instanzen beendet sind (Port 3000 freigeben)
+fuser -k 3000/tcp 2>/dev/null || true
+pkill -f "next-server" || true
 pkill -f "next start" || true
 sleep 1
 
