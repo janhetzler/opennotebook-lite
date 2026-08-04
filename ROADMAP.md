@@ -19,3 +19,4 @@ The immediate focus is on resolving usability blockers and refining the RAG pipe
 * [ ] **Multi-Agent Orchestration:** Extend the single-LLM RAG chat to support specialized sub-agents (e.g., a "Researcher" agent and a "Summarizer" agent) using LangGraph.
 * [ ] **Cross-Notebook Queries:** Allow users to query multiple selected notebooks simultaneously, rather than just one or all.
 * [ ] **Export & Reporting:** Generate automated research summaries and export them as markdown or PDF files.
+* [ ] **Intelligent Router (OKF + RAG Hybrid):** Implement an Open Knowledge Format (OKF) layer to allow deterministic, Git-controlled retrieval of factual knowledge (runbooks, formulas, APIs) alongside probabilistic semantic search.
