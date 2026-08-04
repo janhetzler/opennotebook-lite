@@ -4,10 +4,10 @@ This roadmap outlines planned features, improvements, and architectural goals fo
 
 ## 🚀 Phase 1: Stabilization & Bugfixes (Short-Term)
 The immediate focus is on resolving usability blockers and refining the RAG pipeline.
-* [ ] **Notebook Source Management:** Implement UI to assign uploaded documents to specific notebooks.
-* [ ] **Search Implementation:** Build the missing `/search` page for global full-text and semantic vector search across all indexed documents.
-* [ ] **Dynamic RAG Context Thresholding:** Improve the ChromaDB retrieval in `chat.py` to filter out low-relevance chunks to prevent LLM hallucination (context mixing).
-* [ ] **Frontend Polling/WebSockets:** Add auto-refresh capabilities to the `/sources` page so users don't have to manually reload to see when a document finishes indexing.
+* [x] **Notebook Source Management:** Implement UI to assign uploaded documents to specific notebooks.
+* [x] **Search Implementation:** Build the missing `/search` page for global full-text and semantic vector search across all indexed documents.
+* [x] **Dynamic RAG Context Thresholding:** Improve the ChromaDB retrieval in `chat.py` to filter out low-relevance chunks to prevent LLM hallucination (context mixing).
+* [x] **Frontend Polling/WebSockets:** Add auto-refresh capabilities to the `/sources` page so users don't have to manually reload to see when a document finishes indexing.
 
 ## 🛠️ Phase 2: Core Feature Enhancements (Medium-Term)
 * [ ] **Streaming RAG Responses:** Update the FastAPI endpoint and Next.js frontend to support streaming responses (Server-Sent Events) for a more interactive chat experience.
