@@ -1,12 +1,20 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -e
-echo "=== Open Notebook Light v2.0.0-light wird gestoppt ==="
-PID=$(pgrep -f "uvicorn api.main:app" || true)
-if [ -z "$PID" ]; then
-    echo "[i] Kein laufender Open Notebook Light Server gefunden."
+
+echo "=== Open Notebook Light v2.1.0-light wird gestoppt ==="
+
+echo "[+] Beende FastAPI Backend..."
+if pkill -f "uvicorn api.main:app"; then
+    echo "    Backend erfolgreich beendet."
 else
-    echo "[+] Beende Uvicorn Prozess (PID: $PID)..."
-    kill -15 $PID
-    sleep 2
-    echo "[+] Server erfolgreich gestoppt."
+    echo "    Kein laufendes Backend gefunden."
 fi
+
+echo "[+] Beende Next.js Frontend..."
+if pkill -f "next start"; then
+    echo "    Frontend erfolgreich beendet."
+else
+    echo "    Kein laufendes Frontend gefunden."
+fi
+
+echo "=== Stopvorgang abgeschlossen ==="
